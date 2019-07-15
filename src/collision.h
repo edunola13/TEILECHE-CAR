@@ -4,11 +4,11 @@
 #include <Servo.h>
 #include <DistanceHCSR04.h>
 
-#define PIN_COLLISION_IR 24
-#define PIN_DISTANCE_TRIG 22
-#define PIN_DISTANCE_ECHO 23
+#define PIN_COLLISION_IR 32
+#define PIN_DISTANCE_TRIG 36
+#define PIN_DISTANCE_ECHO 37
 
-#define MAX_DISTANCE_TIME 400
+#define MAX_DISTANCE_TIME 300
 
 class CollisionDetect {
   private:
@@ -20,9 +20,10 @@ class CollisionDetect {
     int actualDegree = 25;
     int *degrees;
     int readers[5];
-    long lastRead;
 
   public:
+    long lastRead;
+
     CollisionDetect();
     void init(int actualDegree, int *degrees);
     void initialReader();

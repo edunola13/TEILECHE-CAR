@@ -13,15 +13,15 @@ void CollisionDetect::init(int p, int *degrees) {
   pinMode(PIN_COLLISION_IR , INPUT);
   distance = DistanceHCSR04(PIN_DISTANCE_ECHO, PIN_DISTANCE_TRIG);
   servoDir.attach(10);  // El servo 1 se controla con el pin 10, deberia ser al 9
-  servoDir.write(this->actualDegree);
-  delay(1000);
   initialReader();
 }
 
 void CollisionDetect::initialReader() {
+  servoDir.write(this->actualDegree);
+  delay(1000);
   for (uint8_t i = 0; i < 5; i++) {
     calculateDistance();
-    delay(200);
+    delay(MAX_DISTANCE_TIME + 1);
   }
 }
 
@@ -42,6 +42,8 @@ void CollisionDetect::calculateDistance() {
   distance.updateSensor();
   uint8_t p = actualDegreePosition();
   readers[p] = distance.getLevel();
+  Serial.print ("Posicion: ");
+  Serial.println(readers[p]);
   moveToNextDegree(p);
 }
 
@@ -59,7 +61,6 @@ int CollisionDetect::actualDegreePosition() {
 }
 
 void CollisionDetect::moveToNextDegree(uint8_t p) {
-  Serial.println(p);
   if (ascDegree) {
     if (p < 4) {
       p++;

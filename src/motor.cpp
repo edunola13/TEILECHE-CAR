@@ -79,6 +79,12 @@ void Motor::rotate(){
   this->motorRight->setSpeed(actualSpeedRight + MIN_ROTATION_M);
   this->motorLeft->run(directionLeft);
   this->motorRight->run(directionRight);
+  if (actualSpeedLeft == 0) {
+    this->motorLeft->setSpeed(0);
+  }
+  if (actualSpeedRight == 0) {
+    this->motorRight->setSpeed(0);
+  }
 }
 
 int Motor::accelerationParse(int acceleration) {
