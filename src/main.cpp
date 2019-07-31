@@ -57,5 +57,5 @@ void loop() {
     // Moverse en base a todo lo calculado
     mapa.decideMove();
   }
-  delay(50);
+  delay(10);
 }

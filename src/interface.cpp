@@ -32,6 +32,8 @@ void RFInterface::executeAction() {
   // Leo la data
   byte data[32];
   radio->read(&data, sizeof(data));
+  int ackData = {(int)iaEnabled};
+  radio->writeAckPayload(1, &ackData, sizeof(ackData));
   // Transformo solo el primer byte a un caracter
   char action;
   memcpy(&action, data, sizeof(action));
@@ -43,65 +45,91 @@ void RFInterface::executeAction() {
     int speedLeft = 0;
     int speedRight = 0;
     uint8_t direction = RELEASE;
+    uint8_t rotate = 0; // 0 = No rota, 1 = Derecha, 2 = Izquierda -> Este es para cuando solo quiere rotar
 
-    // Y-axis used for forward and backward control
-    if (y < 470) {
+    // Y: Define hacia adelante o hacia atras. Se deja un intervalo de 8 en el que no definimos.
+    if (y < 123) {
       direction = BACKWARD;
-      // Convert the declining Y-axis readings for going backward from 470 to 0 into 0 to 255 value for the PWM signal for increasing the motor speed
-      speedRight = map(y, 470, 0, 0, 100);
-      speedLeft = map(y, 470, 0, 0, 100);
-    } else if (y > 550) {
+      // Convertimos los valores para que los entienda Motor
+      speedRight = map(y, 123, 0, 0, 100);
+      speedLeft = map(y, 123, 0, 0, 100);
+    } else if (y > 131) {
       direction = FORWARD;
-      // Convert the increasing Y-axis readings for going forward from 550 to 1023 into 0 to 255 value for the PWM signal for increasing the motor speed
-      speedRight = map(y, 550, 1023, 0, 100);
-      speedLeft = map(y, 550, 1023, 0, 100);
+      // Convertimos los valores para que los entienda Motor
+      speedRight = map(y, 131, 255, 0, 100);
+      speedLeft = map(y, 131, 255, 0, 100);
     } else {
-      // If joystick stays in middle the motors are not moving
+      // No se mueve
       speedRight = 0;
       speedLeft = 0;
     }
 
-    // X-axis used for left and right control
-    if (x < 470) {
-      // Convert the declining X-axis readings from 470 to 0 into increasing 0 to 255 value
-      int xMapped = map(x, 470, 0, 0, 100);
-      // Move to left - decrease left motor speed, increase right motor speed
-      speedLeft = speedLeft - xMapped;
-      speedRight = speedRight + xMapped;
-      // Confine the range from 0 to 255
-      if (speedLeft < 0) {
-        speedLeft = 0;
+    if (direction != RELEASE) {
+      // X: Define rotacion, va a depender de lo que paso en Y
+      if (x < 123) {
+        // Rigth
+        // Convertimos los valores para que los entienda Motor
+        // Reducimos a 50 el map para que no sea tran brusco el doblar
+        int xMapped = map(x, 123, 0, 0, 50);
+        // Move right - decrease right motor speed, increase left motor speed
+        speedLeft = speedLeft + xMapped;
+        speedRight = speedRight - xMapped;
       }
-      if (speedRight > 100) {
-        speedRight = 100;
+      if (x > 131) {
+        // Left
+        // Convertimos los valores para que los entienda Motor
+        // Reducimos a 50 el map para que no sea tran brusco el doblar
+        int xMapped = map(x, 131, 255, 0, 50);
+        // Move to left - decrease left motor speed, increase right motor speed
+        speedLeft = speedLeft - xMapped;
+        speedRight = speedRight + xMapped;
+      }
+    } else {
+      // No hay decision de movimiento, entonces rota
+      if (x < 123) {
+        // Rigth
+        // Convertimos los valores para que los entienda Motor
+        speedRight = map(y, 123, 0, 0, 100);
+        speedLeft = map(y, 123, 0, 0, 100);
+      }
+      if (x > 131) {
+        // Left
+        // Convertimos los valores para que los entienda Motor
+        speedRight = map(y, 131, 255, 0, 100);
+        speedLeft = map(y, 131, 251, 0, 100);
       }
     }
-    if (x > 550) {
-      // Convert the increasing X-axis readings from 550 to 1023 into 0 to 255 value
-      int xMapped = map(x, 550, 1023, 0, 255);
-      // Move right - decrease right motor speed, increase left motor speed
-      speedLeft = speedLeft + xMapped;
-      speedRight = speedRight - xMapped;
-      // Confine the range from 0 to 255
-      if (speedLeft > 100) {
-        speedLeft = 100;
-      }
-      if (speedRight < 0) {
-        speedRight = 0;
-      }
-    }
-    // Prevent buzzing at low speeds (Adjust according to your motors. My motors couldn't start moving if PWM value was below value of 70)
-    if (speedLeft < 5) {
+
+    // Evitamos valores muy bajos -> Ruido de RF
+    if (speedLeft < 3) {
       speedLeft = 0;
     }
-    if (speedRight < 5) {
+    if (speedRight < 3) {
+      speedRight = 0;
+    }
+
+    // Controlamos rangos
+    if (speedLeft > 100) {
+      speedLeft = 100;
+    } else if (speedLeft < 0) {
+      speedLeft = 0;
+    }
+    if (speedRight > 100) {
+      speedRight = 100;
+    } else if (speedRight < 0) {
       speedRight = 0;
     }
 
     if (direction == FORWARD) {
       motor->forwardTurn(speedLeft, speedRight);
-    } else {
+    } else if (direction == BACKWARD) {
       motor->backwardTurn(speedLeft, speedRight);
+    } else if (rotate == 1) { // Derecha
+      motor->forwardBackwardTurn(speedLeft, speedRight);
+    } else if (rotate == 2) { //Izquierda
+      motor->backwardForwardTurn(speedLeft, speedRight);
+    } else {
+      motor->stop();
     }
   }
   if (action == 'i') {

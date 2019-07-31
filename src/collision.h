@@ -4,7 +4,7 @@
 #include <Servo.h>
 #include <DistanceHCSR04.h>
 
-#define PIN_COLLISION_IR 32
+#define PIN_COLLISION_IR 43
 #define PIN_DISTANCE_TRIG 36
 #define PIN_DISTANCE_ECHO 37
 
