@@ -47,7 +47,8 @@ void setup() {
 void loop() {
   if (interface.isMessage()) {
     interface.executeAction();
-  } else if (interface.iaEnabled) {
+  }
+  if (interface.iaEnabled) {
     // Se ejecuta solo cada Xms
     collision.calculateDistance();
     // Actualizar Mapa cada Xms -> Mismo tiempo que collision
@@ -57,5 +58,4 @@ void loop() {
     // Moverse en base a todo lo calculado
     mapa.decideMove();
   }
-  delay(10);
 }

@@ -21,6 +21,7 @@ class RFInterface {
 
   public:
     bool iaEnabled = false;
+    long lastUpdate;
 
     RFInterface();
     void init(RF24 *radio, Motor *motor, byte slaceAdd[]);

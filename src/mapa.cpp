@@ -88,14 +88,11 @@ int Mapa::getActualDirection() {
 }
 
 void Mapa::decideMove() {
-  if (this->collision->isCollisionIr()) {
-    this->motor->backward(50);
-    delay(700);
-    this->motor->stop();
-    this->collision->initialReader();
-  }
+  //
+  // ACA VAN STRATEGIES
+  //
+  long waitUntilNextMove = 0;
   if (this->lastMove < this->lastUpdate) {
-    this->lastMove = millis();
     Serial.print("Direccion: ");
     Serial.println(this->getActualDirection());
     if (this->getActualDirection() == 2) {
@@ -104,44 +101,64 @@ void Mapa::decideMove() {
     if (this->getActualDirection() == 1) {
       // Ir hacia la derecha
       this->motor->forwardTurn(30, 0);
-      delay(150);
-      this->motor->forward(10);
+      waitUntilNextMove = 150;
+      // delay(150);
+      // this->motor->forward(10);
     }
     if (this->getActualDirection() == 3) {
       // Ir hacia la izquierda
       this->motor->forwardTurn(0, 30);
-      delay(150);
-      this->motor->forward(10);
+      waitUntilNextMove = 150;
+      // delay(150);
+      // this->motor->forward(10);
     }
     if (this->getActualDirection() == 0) {
       // Rotar hacia la derecha
       this->motor->forwardBackwardTurn(30, 30);
-      delay(100);
-      this->motor->stop();
+      waitUntilNextMove = 100;
+      // delay(100);
+      // this->motor->stop();
     }
     if (this->getActualDirection() == 4) {
       // Ir hacia la izquierda
       this->motor->backwardForwardTurn(30, 30);
-      delay(100);
-      this->motor->stop();
+      waitUntilNextMove = 100;
+      // delay(100);
+      // this->motor->stop();
     }
     if (this->getActualDirection() == -1) {
       if (this->positions[0] == this->positions[4]) {
         this->motor->backward(30);
-        delay(300);
+        waitUntilNextMove = 100;
+        // delay(300);
       } else if (this->positions[0] > this->positions[4]) {
         // Si de la derecha tengo los objetivos mas lejos
         this->motor->backwardTurn(30, 15);
-        delay(300);
+        waitUntilNextMove = 100;
+        // delay(300);
       } else {
         // Si no de la izquierda
         this->motor->backwardTurn(15, 30);
-        delay(300);
+        waitUntilNextMove = 100;
+        // delay(300);
       }
       this->motor->stop();
-      this->collision->initialReader();
+      // this->collision->initialReader();
     }
   }
+
+  if (this->collision->isCollisionIr()) {
+    // this->motor->backward(50);
+    // delay(500);
+    waitUntilNextMove = 200;
+    // Segun cuanto tiempo llevo aca puedo ver de ir para atras, girar, etc
+    if (this->motor->directionLeft == FORWARD || this->motor->directionRight == FORWARD ) {
+      this->motor->stop();
+    }
+    // this->collision->initialReader();
+  }
+
+  this->lastMove = millis() + waitUntilNextMove;
 }
 
 //

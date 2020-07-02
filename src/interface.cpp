@@ -89,14 +89,16 @@ void RFInterface::executeAction() {
       if (x < 123) {
         // Rigth
         // Convertimos los valores para que los entienda Motor
-        speedRight = map(y, 123, 0, 0, 100);
-        speedLeft = map(y, 123, 0, 0, 100);
+        speedRight = map(x, 123, 0, 0, 100);
+        speedLeft = map(x, 123, 0, 0, 100);
+        rotate = 1;
       }
       if (x > 131) {
         // Left
         // Convertimos los valores para que los entienda Motor
-        speedRight = map(y, 131, 255, 0, 100);
-        speedLeft = map(y, 131, 251, 0, 100);
+        speedRight = map(x, 131, 255, 0, 100);
+        speedLeft = map(x, 131, 251, 0, 100);
+        rotate = 2;
       }
     }
 
@@ -129,11 +131,19 @@ void RFInterface::executeAction() {
     } else if (rotate == 2) { //Izquierda
       motor->backwardForwardTurn(speedLeft, speedRight);
     } else {
-      motor->stop();
+      if (this->iaEnabled) {
+        // No hacer nada -> Decide IA
+      } else {
+        motor->stop();
+      }
     }
   }
-  if (action == 'i') {
-    memcpy(&message, data, sizeof(message));
-    this->iaEnabled = (bool) message.data[0];
+  if (message.data[2] == 1) { // Se apreto el boton del jostick
+    // memcpy(&message, data, sizeof(message));
+    if (this->lastUpdate < millis()) {
+      Serial.println("Change IA");
+      this->iaEnabled = ! this->iaEnabled;
+      this->lastUpdate = millis() + 1000;
+    }
   }
 }

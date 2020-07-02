@@ -13,10 +13,11 @@ class Motor {
     AF_DCMotor *motorRight;
     int actualSpeedLeft = 0;
     int actualSpeedRight = 0;
+
+  public:
     uint8_t directionLeft = RELEASE;
     uint8_t directionRight = RELEASE;
 
-  public:
     Motor();
     void init(AF_DCMotor *motorLeft, AF_DCMotor *motorRight);
     void stop();
